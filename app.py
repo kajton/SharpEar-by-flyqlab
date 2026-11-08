@@ -7,11 +7,18 @@ import streamlit as st
 from comparator import analyze_intonation
 
 
+DIFFICULTY_TOLERANCES = {
+    "Easy (±25 centów)": 25,
+    "Standard (±15 centów)": 15,
+    "Pro (±8 centów)": 8,
+}
+
+
 def show_analysis(
     audio_bytes: bytes,
     suffix: str,
     file_name: str,
-    delta_cents: int,
+    tolerance_cents: int,
 ) -> None:
     with TemporaryDirectory() as temp_dir:
         audio_path = Path(temp_dir) / f"audio{suffix}"
@@ -19,7 +26,7 @@ def show_analysis(
 
         percent_in_tune, mean_error, figure = analyze_intonation(
             audio_path,
-            tolerance_cents=delta_cents,
+            tolerance_cents=tolerance_cents,
             show_plot=False,
         )
         st.metric("Czystość intonacji", f"{percent_in_tune:.1f}%")
@@ -30,13 +37,13 @@ def show_analysis(
 
 st.set_page_config(page_title="Analiza intonacji")
 st.title("Analiza czystości intonacji")
-delta_cents = st.slider(
-    "Delta (centy)",
-    min_value=0,
-    max_value=50,
-    value=15,
-    step=1,
+difficulty = st.radio(
+    "Poziom trudności",
+    options=list(DIFFICULTY_TOLERANCES),
+    index=1,
+    horizontal=True,
 )
+tolerance_cents = DIFFICULTY_TOLERANCES[difficulty]
 
 upload_tab, microphone_tab = st.tabs(["Wgraj plik", "Nagraj z mikrofonu"])
 
@@ -51,7 +58,7 @@ with upload_tab:
             uploaded_file.getvalue(),
             Path(uploaded_file.name).suffix.lower(),
             uploaded_file.name,
-            delta_cents,
+            tolerance_cents,
         )
 
 with microphone_tab:
@@ -62,5 +69,5 @@ with microphone_tab:
             recording.getvalue(),
             ".wav",
             "Nagranie z mikrofonu",
-            delta_cents,
+            tolerance_cents,
         )
