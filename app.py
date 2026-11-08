@@ -1,0 +1,47 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import matplotlib.pyplot as plt
+import streamlit as st
+
+from comparator import analyze_intonation
+
+
+def show_analysis(audio_bytes: bytes, suffix: str, file_name: str) -> None:
+    with TemporaryDirectory() as temp_dir:
+        audio_path = Path(temp_dir) / f"audio{suffix}"
+        audio_path.write_bytes(audio_bytes)
+
+        percent_in_tune, mean_error, figure = analyze_intonation(
+            audio_path,
+            show_plot=False,
+        )
+        st.metric("Czystość intonacji", f"{percent_in_tune:.1f}%")
+        st.caption(f"Średni błąd bezwzględny: {mean_error:.2f} centów")
+        st.pyplot(figure)
+        plt.close(figure)
+
+
+st.set_page_config(page_title="Analiza intonacji")
+st.title("Analiza czystości intonacji")
+
+upload_tab, microphone_tab = st.tabs(["Wgraj plik", "Nagraj z mikrofonu"])
+
+with upload_tab:
+    uploaded_file = st.file_uploader(
+        "Wybierz plik audio",
+        type=["wav", "mp3"],
+    )
+    if uploaded_file is not None:
+        st.audio(uploaded_file)
+        show_analysis(
+            uploaded_file.getvalue(),
+            Path(uploaded_file.name).suffix.lower(),
+            uploaded_file.name,
+        )
+
+with microphone_tab:
+    recording = st.audio_input("Nagraj dźwięk")
+    if recording is not None:
+        st.audio(recording)
+        show_analysis(recording.getvalue(), ".wav", "Nagranie z mikrofonu")
