@@ -24,11 +24,18 @@ def show_analysis(
         audio_path = Path(temp_dir) / f"audio{suffix}"
         audio_path.write_bytes(audio_bytes)
 
-        percent_in_tune, mean_error, figure = analyze_intonation(
-            audio_path,
-            tolerance_cents=tolerance_cents,
-            show_plot=False,
-        )
+        try:
+            percent_in_tune, mean_error, figure = analyze_intonation(
+                audio_path,
+                tolerance_cents=tolerance_cents,
+                show_plot=False,
+            )
+        except ValueError:
+            st.warning(
+                "Nie wykryto wyraźnych dźwięków. Nagraj głośniej lub sprawdź mikrofon."
+            )
+            return
+
         st.metric("Czystość intonacji", f"{percent_in_tune:.1f}%")
         st.caption(f"Średni błąd bezwzględny: {mean_error:.2f} centów")
         st.pyplot(figure)
