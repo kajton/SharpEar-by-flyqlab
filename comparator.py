@@ -11,8 +11,9 @@ def _extract_midi(path: str | Path) -> np.ndarray:
     f0, voiced_flag, voiced_probs = librosa.pyin(
         audio,
         sr=sample_rate,
-        fmin=190,
+        fmin=65,
         fmax=3500,
+        resolution=0.02,
     )
 
     valid = voiced_flag & (voiced_probs > 0.3) & np.isfinite(f0)
@@ -80,8 +81,9 @@ def analyze_intonation(
     f0, voiced_flag, voiced_probs = librosa.pyin(
         audio,
         sr=sample_rate,
-        fmin=190,
+        fmin=65,
         fmax=3500,
+        resolution=0.02,
     )
 
     valid = voiced_flag & (voiced_probs > 0.3) & np.isfinite(f0)
