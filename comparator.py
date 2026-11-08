@@ -123,7 +123,22 @@ def analyze_intonation(
     if not midi_f0.size:
         raise ValueError(f"No stable pitch frames found in {file_path}")
 
-    deviation_cents = (midi_f0 - np.round(midi_f0)) * 100
+    rounded_midi = np.round(midi_f0)
+    deviation_cents = (midi_f0 - rounded_midi) * 100
+
+    # Keep only frames whose rounded note agrees with both adjacent frames.
+    continuous_note = np.zeros(rounded_midi.shape, dtype=bool)
+    if rounded_midi.size >= 3:
+        continuous_note[1:-1] = (
+            (rounded_midi[1:-1] == rounded_midi[:-2])
+            & (rounded_midi[1:-1] == rounded_midi[2:])
+        )
+
+    times = times[continuous_note]
+    deviation_cents = deviation_cents[continuous_note]
+    if not deviation_cents.size:
+        raise ValueError(f"No continuous note frames found in {file_path}")
+
     within_tolerance = np.abs(deviation_cents) <= tolerance_cents
     percent_in_tune = float(np.mean(within_tolerance) * 100)
     mean_absolute_error = float(np.mean(np.abs(deviation_cents)))
