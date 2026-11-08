@@ -5,20 +5,30 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+HOP_LENGTH = 512
+FRAME_LENGTH = 2048
+
+
 def _extract_midi(path: str | Path) -> np.ndarray:
     audio, sample_rate = librosa.load(path, sr=None)
     audio = librosa.util.normalize(audio)
-    f0, voiced_flag, voiced_probs = librosa.pyin(
+    f0 = librosa.yin(
         audio,
-        sr=sample_rate,
         fmin=65,
-        fmax=3500,
-        resolution=0.02,
+        fmax=2000,
+        sr=sample_rate,
+        frame_length=FRAME_LENGTH,
+        hop_length=HOP_LENGTH,
     )
+    rms = librosa.feature.rms(
+        y=audio,
+        frame_length=FRAME_LENGTH,
+        hop_length=HOP_LENGTH,
+    )[0]
 
-    valid = voiced_flag & (voiced_probs > 0.05) & np.isfinite(f0)
+    valid = np.isfinite(f0) & (rms > 0.01)
     if not np.any(valid):
-        raise ValueError(f"No confident voiced pitch frames found in {path}")
+        raise ValueError(f"No audible pitch frames found in {path}")
 
     return librosa.hz_to_midi(f0[valid])
 
@@ -78,22 +88,32 @@ def analyze_intonation(
 
     y, sample_rate = librosa.load(file_path, sr=None)
     y = librosa.util.normalize(y)
-    f0, voiced_flag, voiced_probs = librosa.pyin(
+    f0 = librosa.yin(
         y,
-        sr=sample_rate,
         fmin=65,
         fmax=2000,
-        resolution=0.02,
+        sr=sample_rate,
+        frame_length=FRAME_LENGTH,
+        hop_length=HOP_LENGTH,
     )
+    rms = librosa.feature.rms(
+        y=y,
+        frame_length=FRAME_LENGTH,
+        hop_length=HOP_LENGTH,
+    )[0]
 
-    # Keep every confident voiced pyin frame; no onset-based filtering is applied.
-    valid = voiced_flag & (voiced_probs > 0.05) & np.isfinite(f0)
+    # Keep only audible pitch frames, using the same frame and hop lengths for YIN and RMS.
+    valid = np.isfinite(f0) & (rms > 0.01)
     if not np.any(valid):
-        raise ValueError(f"No confident voiced pitch frames found in {file_path}")
+        raise ValueError(f"No audible pitch frames found in {file_path}")
 
     midi_f0 = librosa.hz_to_midi(f0[valid])
     deviation_cents = (midi_f0 - np.round(midi_f0)) * 100
-    times = librosa.times_like(f0, sr=sample_rate)[valid]
+    times = librosa.times_like(
+        f0,
+        sr=sample_rate,
+        hop_length=HOP_LENGTH,
+    )[valid]
 
     within_tolerance = np.abs(deviation_cents) <= tolerance_cents
     percent_in_tune = float(np.mean(within_tolerance) * 100)
