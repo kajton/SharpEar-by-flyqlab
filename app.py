@@ -30,10 +30,8 @@ def show_analysis(
                 tolerance_cents=tolerance_cents,
                 show_plot=False,
             )
-        except ValueError:
-            st.warning(
-                "Nie wykryto wyraźnych dźwięków. Nagraj głośniej lub sprawdź mikrofon."
-            )
+        except ValueError as e:
+            st.warning(f"Błąd analizy: {e}")
             return
 
         st.metric("Czystość intonacji", f"{percent_in_tune:.1f}%")
