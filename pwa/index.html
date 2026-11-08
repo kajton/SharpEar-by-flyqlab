@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101010" />
+    <meta name="description" content="Offline intonation practice and pitch analysis." />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Sharp Ear — Intonation</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topline">
+        <a class="wordmark" href="./" aria-label="Sharp Ear home">SHARP<span>EAR</span></a>
+        <span class="offline-state"><i></i> OFFLINE READY</span>
+      </header>
+
+      <section class="hero" aria-labelledby="title">
+        <p class="eyebrow">A listening practice tool</p>
+        <h1 id="title">FIND<br />YOUR <span>NOTE.</span></h1>
+        <p class="intro">Sing a note. See how close you are.</p>
+
+        <div class="actions">
+          <button class="record-button" id="recordButton" type="button">
+            <span class="record-dot" aria-hidden="true"></span>
+            <span id="recordLabel">RECORD</span>
+          </button>
+          <button class="upload-button" id="uploadButton" type="button">UPLOAD WAV <span aria-hidden="true">↗</span></button>
+          <input id="fileInput" type="file" accept="audio/wav,.wav,audio/x-wav" hidden />
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite">Choose a level, then record or upload a WAV.</p>
+      </section>
+
+      <section class="results" id="results" hidden aria-live="polite">
+        <div class="result-heading">
+          <div><p class="eyebrow">INTONATION</p><p class="score" id="score">—<span>%</span></p><p class="score-label">IN TUNE</p></div>
+          <div class="mean-error"><span id="meanError">—</span><small>MEAN ERROR · CENTS</small></div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart" aria-label="Pitch deviation over time. Hover over points for details." role="img"></canvas>
+          <div id="tooltip" class="tooltip" hidden></div>
+        </div>
+        <p class="chart-note">Deviation from the nearest equal-tempered note · hover for details</p>
+      </section>
+    </main>
+
+    <nav class="difficulty-bar" aria-label="Intonation tolerance">
+      <span class="difficulty-label">TOLERANCE</span>
+      <div class="difficulty-options" role="radiogroup" aria-label="Choose tolerance">
+        <button type="button" class="difficulty" data-tolerance="25" role="radio" aria-checked="false">Easy <span>±25c</span></button>
+        <button type="button" class="difficulty selected" data-tolerance="15" role="radio" aria-checked="true">Standard <span>±15c</span></button>
+        <button type="button" class="difficulty" data-tolerance="8" role="radio" aria-checked="false">Pro <span>±8c</span></button>
+      </div>
+    </nav>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

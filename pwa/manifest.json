@@ -1,0 +1,16 @@
+{
+  "id": "sharp-ear-pwa-v1",
+  "name": "Sharp Ear — Intonation",
+  "short_name": "Sharp Ear",
+  "description": "Offline intonation practice and pitch analysis.",
+  "lang": "en",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101010",
+  "theme_color": "#101010",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
