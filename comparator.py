@@ -16,7 +16,7 @@ def _extract_midi(path: str | Path) -> np.ndarray:
         resolution=0.02,
     )
 
-    valid = voiced_flag & (voiced_probs > 0.3) & np.isfinite(f0)
+    valid = voiced_flag & (voiced_probs > 0.05) & np.isfinite(f0)
     if not np.any(valid):
         raise ValueError(f"No confident voiced pitch frames found in {path}")
 
@@ -87,7 +87,7 @@ def analyze_intonation(
     )
 
     # Keep every confident voiced pyin frame; no onset-based filtering is applied.
-    valid = voiced_flag & (voiced_probs > 0.1) & np.isfinite(f0)
+    valid = voiced_flag & (voiced_probs > 0.05) & np.isfinite(f0)
     if not np.any(valid):
         raise ValueError(f"No confident voiced pitch frames found in {file_path}")
 
