@@ -76,17 +76,18 @@ def analyze_intonation(
     if tolerance_cents < 0:
         raise ValueError("tolerance_cents must be non-negative")
 
-    audio, sample_rate = librosa.load(file_path, sr=None)
-    audio = librosa.util.normalize(audio)
+    y, sample_rate = librosa.load(file_path, sr=None)
+    y = librosa.util.normalize(y)
     f0, voiced_flag, voiced_probs = librosa.pyin(
-        audio,
+        y,
         sr=sample_rate,
         fmin=65,
-        fmax=3500,
+        fmax=2000,
         resolution=0.02,
     )
 
-    valid = voiced_flag & (voiced_probs > 0.3) & np.isfinite(f0)
+    # Keep every confident voiced pyin frame; no onset-based filtering is applied.
+    valid = voiced_flag & (voiced_probs > 0.1) & np.isfinite(f0)
     if not np.any(valid):
         raise ValueError(f"No confident voiced pitch frames found in {file_path}")
 
