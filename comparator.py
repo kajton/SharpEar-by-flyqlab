@@ -3,6 +3,7 @@ from pathlib import Path
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.signal import medfilt
 
 
 HOP_LENGTH = 512
@@ -102,19 +103,27 @@ def analyze_intonation(
         hop_length=HOP_LENGTH,
     )[0]
 
-    # Keep only audible pitch frames, using the same frame and hop lengths for YIN and RMS.
-    valid = np.isfinite(f0) & (rms > 0.01)
-    if not np.any(valid):
+    # Use matching frame/hop lengths and reject quiet frames before smoothing pitch.
+    voiced = np.isfinite(f0) & (rms > 0.05)
+    if not np.any(voiced):
         raise ValueError(f"No audible pitch frames found in {file_path}")
 
-    midi_f0 = librosa.hz_to_midi(f0[valid])
-    deviation_cents = (midi_f0 - np.round(midi_f0)) * 100
+    voiced_f0 = medfilt(f0[voiced], kernel_size=5)
+    midi_f0 = librosa.hz_to_midi(voiced_f0)
     times = librosa.times_like(
         f0,
         sr=sample_rate,
         hop_length=HOP_LENGTH,
-    )[valid]
+    )[voiced]
 
+    # Exclude frames whose pitch changes abruptly, such as note transitions or clicks.
+    stable = np.abs(np.diff(midi_f0, prepend=midi_f0[0])) < 0.3
+    midi_f0 = midi_f0[stable]
+    times = times[stable]
+    if not midi_f0.size:
+        raise ValueError(f"No stable pitch frames found in {file_path}")
+
+    deviation_cents = (midi_f0 - np.round(midi_f0)) * 100
     within_tolerance = np.abs(deviation_cents) <= tolerance_cents
     percent_in_tune = float(np.mean(within_tolerance) * 100)
     mean_absolute_error = float(np.mean(np.abs(deviation_cents)))
